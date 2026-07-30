@@ -10,6 +10,51 @@ import random
 # --- CONFIGURACIÓN INICIAL ---
 st.set_page_config(page_title="GEA System ERP", page_icon="gea_logo.png", layout="wide")
 
+# --- DISEÑO CORPORATIVO (Fondo y Cursor) ---
+st.markdown("""
+<style>
+    /* Ocultar menús de Streamlit */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    
+    /* Fondo oscuro animado con tonalidades orgánicas (verde profundo y vino) */
+    .stApp {
+        background: linear-gradient(135deg, #0f1108, #1a2b15, #1a0808, #0d0d0d);
+        background-size: 400% 400%;
+        animation: gradientMove 15s ease infinite;
+    }
+    @keyframes gradientMove {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+    
+    /* Textos en blanco para contraste */
+    .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp p, .stApp label, .stApp span {
+        color: #ecf0f1 !important;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    /* Puntero del mouse sofisticado (cruz fina verde) */
+    body, html, * {
+        cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="%234CAF50" d="M12 2L2 22h20L12 2z"/></svg>') 12 12, auto;
+    }
+    
+    /* Estilo de botones más serio */
+    .stButton>button {
+        border: 1px solid #4CAF50;
+        background-color: transparent;
+        color: #ecf0f1;
+        transition: all 0.3s ease;
+    }
+    .stButton>button:hover {
+        background-color: #4CAF50;
+        color: white;
+    }
+</style>
+""", unsafe_allow_html=True)
+
 # --- BASE DE DATOS ---
 def init_db():
     conn = sqlite3.connect('gea_system.db')
@@ -69,7 +114,7 @@ init_db()
 PRODUCTOS = ["Rabanito morado/mix", "Rabanito rosado", "Rabanito rojo", "Brocoli", "Beterraga", "Linaza", "Girasol", "Cilantro", "Nabo", "Zanahoria"]
 BANDEJAS = ["Bandeja chata", "Bandeja delgada", "Bandeja alta", "Bandeja verde"]
 TAPERS = ["Taper 8nz", "Taper 12onz", "Taper 16onz"]
-ESTADOS = ["✔ Óptimo", "± Regular", "✗ Deficiente"]
+ESTADOS = ["Optimo", "Regular", "Deficiente"]
 
 MESES_NOMBRES = {"01": "Enero", "02": "Febrero", "03": "Marzo", "04": "Abril", "05": "Mayo", "06": "Junio", "07": "Julio", "08": "Agosto", "09": "Septiembre", "10": "Octubre", "11": "Noviembre", "12": "Diciembre"}
 
@@ -83,13 +128,13 @@ def cargar_datos_demo():
             estado_luz = random.choices(ESTADOS, weights=[0.7, 0.2, 0.1])[0]
             estado_cos = random.choices(ESTADOS, weights=[0.6, 0.3, 0.1])[0]
             tapers = random.randint(3, 15)
-            merma = random.uniform(5, 20) if estado_cos != "✗ Deficiente" else random.uniform(50, 90)
+            merma = random.uniform(5, 20) if estado_cos != "Deficiente" else random.uniform(50, 90)
             add_data("produccion_final", (prod, str(random.randint(1, 50)), "Bandeja Estándar", fecha_sim.strftime("%Y-%m-%d"), fecha_luz.strftime("%Y-%m-%d"), estado_luz, fecha_cos.strftime("%Y-%m-%d"), estado_cos, random.uniform(30, 50), tapers, "Taper 12onz", 0.0, merma, "Microgreens"))
 
 def analizar_datos_gea_avanzado(df, pregunta):
     if df.empty: return "No hay datos suficientes en este período."
     p = pregunta.lower()
-    response = "🤖 **INFORME DE INTELIGENCIA OPERATIVA GEA**\n\n"
+    response = "**INFORME DE INTELIGENCIA OPERATIVA GEA**\n\n"
     total_tapers = df['cantidad_tapers'].sum()
     total_merma = df['merma'].sum()
     ratio_merma = (total_merma / total_tapers) * 100 if total_tapers > 0 else 0
@@ -98,21 +143,20 @@ def analizar_datos_gea_avanzado(df, pregunta):
     cultivos_80 = df_pareto[df_pareto['cumulative'] <= 80]['producto'].tolist()
     cultivo_top_merma = df_pareto.iloc[0]['producto'] if not df_pareto.empty else "N/A"
     
-    if any(word in p for word in ['pareto', 'diagrama', 'opinion', 'opinión', 'eficiencia', 'mejora', 'mejorar']):
-        response += "**1. Diagnóstico Estratégico (Pareto):**\n"
+    if any(word in p for word in ['pareto', 'diagrama', 'opinion', 'eficiencia', 'mejora']):
+        response += "**1. Diagnóstico Estratégico:**\n"
         if cultivos_80:
-            response += f"El análisis revela que el 80% de tus pérdidas se concentran en: **{', '.join(cultivos_80)}**. No tienes un problema generalizado, sino focos de ineficiencia específicos.\n\n"
+            response += f"El análisis revela que el 80% de las pérdidas se concentran en: {', '.join(cultivos_80)}.\n\n"
         response += "**2. Análisis de Causa Raíz:**\n"
-        df_def = df[df['estado_cosecha'] == '✗ Deficiente']
+        df_def = df[df['estado_cosecha'] == 'Deficiente']
         if not df_def.empty:
-            response += f"Los lotes 'Deficientes' generan una merma promedio de {df_def['merma'].mean():.1f}g. Esto suele estar correlacionado con dos factores: dosificación imprecisa de sustrato y fallas en el control de humedad durante la transición a la luz.\n\n"
-        response += "**3. Plan de Acción para Mejorar la Eficiencia:**\n"
-        response += f"- **Acción 1:** Estandarizar el pesaje en gramos del sustrato para '{cultivo_top_merma}'.\n- **Acción 2:** Implementar alertas visuales para lotes en estado 'Regular'.\n- **Acción 3:** Replicar el protocolo de los lotes 'Óptimos' (✔) hacia los cultivos con menor rendimiento.\n"
+            response += f"Los lotes 'Deficientes' generan una merma promedio de {df_def['merma'].mean():.1f}g. Esto suele estar correlacionado con dos factores: dosificación imprecisa de sustrato y fallas en el control de humedad.\n\n"
+        response += "**3. Plan de Acción:**\n- Estandarizar el pesaje del sustrato.\n- Implementar alertas visuales para lotes en estado 'Regular'.\n- Replicar el protocolo de los lotes 'Óptimos' hacia los cultivos con menor rendimiento.\n"
         return response
     else:
-        response += f"**1. Resumen Operativo:**\nSe procesaron {len(df)} lotes, generando {total_tapers} tapers. La merma total es {total_merma:.1f}g (ratio del {ratio_merma:.1f}%).\n\n"
-        response += f"**2. Punto de Atención:**\nEl cultivo que requiere atención inmediata es **{cultivo_top_merma}**.\n\n"
-        response += "**3. Recomendación:**\nUtiliza el Diagrama de Pareto para identificar qué cultivos generan el 80% de tus pérdidas y enfocar ahí los esfuerzos."
+        response += f"**1. Resumen Operativo:**\nSe procesaron {len(df)} lotes, generando {total_tapers} tapers. Merma total: {total_merma:.1f}g (ratio del {ratio_merma:.1f}%).\n\n"
+        response += f"**2. Punto de Atención:**\nEl cultivo que requiere atención inmediata es {cultivo_top_merma}.\n\n"
+        response += "**3. Recomendación:**\nUtilice el Diagrama de Pareto para identificar qué cultivos generan el 80% de las pérdidas."
         return response
 
 if 'logged_in' not in st.session_state:
@@ -128,17 +172,8 @@ def logout():
     st.session_state.user_data = None
     st.rerun()
 
-# --- LOGIN (Tema Oscuro) ---
+# --- LOGIN ---
 if not st.session_state.logged_in:
-    st.markdown("""
-    <style>
-        #MainMenu {visibility: hidden;} footer {visibility: hidden;} header {visibility: hidden;}
-        .stApp { background: linear-gradient(135deg, #0f1108, #1a2b15, #0d0d0d, #2a0a0a); background-size: 400% 400%; animation: gradientMove 15s ease infinite; }
-        @keyframes gradientMove { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-        .stApp h1, .stApp h4, .stApp p, .stApp label { color: #ecf0f1 !important; }
-        .stImage img { border-radius: 15px; box-shadow: 0 0 25px rgba(255, 255, 255, 0.2); }
-    </style>
-    """, unsafe_allow_html=True)
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         try: st.image("gea_logo.png", width=150)
@@ -147,53 +182,50 @@ if not st.session_state.logged_in:
         st.markdown("<h4 style='text-align: center; color: #bdc3c7; margin-top: 0px;'>Germinados Orgánicos Arequipa</h4>", unsafe_allow_html=True)
         st.markdown("<p style='text-align: center; color: #95a5a6;'>Plataforma Operativa de Producción, Calidad y Ventas</p>", unsafe_allow_html=True)
         st.markdown("<hr style='border: 1px solid #7f8c8d;'>", unsafe_allow_html=True)
-        tab_jefe, tab_trab = st.tabs(["👔 Acceso Dirección", "👷 Acceso Personal de Planta"])
+        tab_jefe, tab_trab = st.tabs(["Acceso Gerencia", "Acceso Personal de Planta"])
+        
         with tab_jefe:
             st.markdown("##### Ingrese sus credenciales de Director")
             pin_input = st.text_input("Código Maestro (PIN)", type="password", placeholder="••••••••")
-            if st.button("Desbloquear Panel Directivo", use_container_width=True, type="primary"):
+            if st.button("Desbloquear Panel Directivo", use_container_width=True):
                 if pin_input == get_config('pin_jefe'):
                     st.session_state.logged_in = True
                     st.session_state.user_data = {"nombre": "Director GEA", "rol": "jefe"}
                     st.rerun()
-                else: st.error("⛔ Código Maestro incorrecto. Acceso denegado.")
+                else: st.error("Código Maestro incorrecto. Acceso denegado.")
+
         with tab_trab:
             st.markdown("##### Fichaje de Turno Operativo")
             area_trab = st.selectbox("Seleccione su Área de Trabajo", ["Siembra", "Microgreens", "Tienda"])
             pin_trab = st.text_input("PIN del Área Asignada", type="password", placeholder="••••")
             pins_areas = {"Siembra": "1234", "Microgreens": "5678", "Tienda": "9012"}
-            if st.button("Fichar y Ingresar al Sistema", use_container_width=True):
+            if st.button("Fichar e Ingresar al Sistema", use_container_width=True):
                 if pin_trab == pins_areas.get(area_trab):
                     st.session_state.logged_in = True
                     st.session_state.user_data = {"nombre": f"Operario de {area_trab}", "rol": "trabajador", "area": area_trab}
                     st.rerun()
-                else: st.error("⛔ PIN de área incorrecto.")
+                else: st.error("PIN de área incorrecto.")
 
 else:
     user = st.session_state.user_data
     with st.sidebar:
         if os.path.exists("gea_logo.png"): st.image("gea_logo.png", width=80)
-        st.write(f"👋 **Bienvenido:**\n{user['nombre']}")
-        if user['rol'] == 'jefe': st.write("📧 Sesión: Directiva\n🔒 Conexión Encriptada SSL/TLS")
-        else: st.write(f"🏭 Área: {user['area']}")
+        st.write(f"**Bienvenido:**\n{user['nombre']}")
+        if user['rol'] == 'jefe': st.write("**Sesión:** Gerencia\n**Conexión:** Encriptada SSL/TLS")
+        else: st.write(f"**Área:** {user['area']}")
         st.markdown("---")
-        if st.button("🚪 Cerrar Sesión"): logout()
+        if st.button("Cerrar Sesión"): logout()
 
     if user["rol"] == "trabajador":
-        st.title(f"🏭 Panel de {user['area']}")
+        st.title(f"Panel de {user['area']}")
+        
         if user['area'] == "Microgreens":
-            st.subheader("✂️ Registro de Cosecha Microgreens")
-            with st.expander("📄 Descargar Plantilla Oficial de Excel"):
-                st.write("Si prefieres llenar los datos en Excel y luego subirlos, descarga el formato oficial aquí:")
-                df_plantilla = pd.DataFrame(columns=['Identificación de Producto', 'Numero de bandeja/Lote', 'Tipo de bandeja', 'Fecha de siembra', 'Fecha de transición a la luz', 'Estado del cultivo de transicion a la luz', 'Fecha de cosecha', 'Estado del cultivo en cosecha', 'Peso bruto', 'Cantidad de tapers', 'Taper usado para envasado', 'Peso sobrante/ Remanente', 'Merma'])
-                # Omitimos openpyxl en la nube, usamos xlsxwriter o default
-                try:
-                    output = io.BytesIO()
-                    with pd.ExcelWriter(output, engine='openpyxl') as writer: df_plantilla.to_excel(writer, index=False, sheet_name='Hoja2')
-                    st.download_button("📥 Descargar Plantilla", data=output.getvalue(), file_name="Plantilla_Cosecha_GEA.xlsx")
-                except:
-                    st.info("Descarga disponible en versión local.")
-                file_trab = st.file_uploader("Subir Excel lleno aquí", type=['xlsx'], key="excel_trab")
+            st.subheader("Registro de Cosecha Microgreens")
+            
+            # Carga de Excel del Trabajador
+            with st.expander("Carga de Registros vía Excel"):
+                st.write("Suba el archivo Excel con el formato oficial proporcionado por la jefatura de área. Los datos se enviarán automáticamente al panel directivo.")
+                file_trab = st.file_uploader("Seleccionar archivo Excel", type=['xlsx'], key="excel_trab")
                 if file_trab is not None:
                     try:
                         df_excel = pd.read_excel(file_trab, sheet_name='Hoja2')
@@ -204,11 +236,18 @@ else:
                             def parse_date(d):
                                 try: return pd.to_datetime(d).strftime('%Y-%m-%d')
                                 except: return date.today().strftime('%Y-%m-%d')
-                            add_data("produccion_final", (prod, str(row.get('Numero de bandeja/Lote', '')).strip(), str(row.get('Tipo de bandeja', '')).strip(), parse_date(row.get('Fecha de siembra')), parse_date(row.get('Fecha de transición a la luz')), str(row.get('Estado del cultivo de transicion a la luz', '✔ Óptimo')).strip(), parse_date(row.get('Fecha de cosecha')), str(row.get('Estado del cultivo en cosecha', '✔ Óptimo')).strip(), float(row.get('Peso bruto', 0) or 0), int(row.get('Cantidad de tapers', 0) or 0), str(row.get('Taper usado para envasado', '')).strip(), float(row.get('Peso sobrante/ Remanente', 0) or 0), float(row.get('Merma', 0) or 0), "Microgreens"))
-                        st.success(f"¡Éxito! Se cargaron {len(df_excel)} registros.")
-                    except Exception as e: st.error(f"Error al leer. {e}")
+                            def map_state(s):
+                                s = str(s)
+                                if '✔' in s: return 'Optimo'
+                                if '±' in s: return 'Regular'
+                                if '✗' in s: return 'Deficiente'
+                                return 'Optimo'
+                            add_data("produccion_final", (prod, str(row.get('Numero de bandeja/Lote', '')).strip(), str(row.get('Tipo de bandeja', '')).strip(), parse_date(row.get('Fecha de siembra')), parse_date(row.get('Fecha de transición a la luz')), map_state(row.get('Estado del cultivo de transicion a la luz')), parse_date(row.get('Fecha de cosecha')), map_state(row.get('Estado del cultivo en cosecha')), float(row.get('Peso bruto', 0) or 0), int(row.get('Cantidad de tapers', 0) or 0), str(row.get('Taper usado para envasado', '')).strip(), float(row.get('Peso sobrante/ Remanente', 0) or 0), float(row.get('Merma', 0) or 0), "Microgreens"))
+                        st.success(f"Proceso completado. Se han cargado {len(df_excel)} registros al sistema.")
+                    except Exception as e: st.error(f"Error al procesar el archivo. Verifique el formato. Detalle: {e}")
+            
             st.markdown("---")
-            st.write("**O regístralo al instante aquí:**")
+            st.write("**Registro Manual Instantáneo**")
             with st.form("form_cosecha_v3"):
                 c1, c2, c3 = st.columns(3)
                 with c1: producto = st.selectbox("Identificación de Producto", PRODUCTOS); lote = st.text_input("Numero de bandeja/Lote", "1"); tipo_bandeja = st.selectbox("Tipo de bandeja", BANDEJAS)
@@ -217,11 +256,12 @@ else:
                 c4, c5 = st.columns(2)
                 with c4: cantidad_tapers = st.number_input("Cantidad de tapers", min_value=0, step=1); taper_envasado = st.selectbox("Taper usado para envasado", TAPERS)
                 with c5: peso_sobrante = st.number_input("Peso sobrante/Remanente (g)", min_value=0.0, step=0.1); merma = st.number_input("Merma (g)", min_value=0.0, step=0.1)
-                if st.form_submit_button("✅ REGISTRAR EN SISTEMA"):
+                if st.form_submit_button("Registrar en Sistema"):
                     add_data("produccion_final", (producto, lote, tipo_bandeja, fecha_siembra.strftime("%Y-%m-%d"), fecha_luz.strftime("%Y-%m-%d"), estado_luz, fecha_cosecha.strftime("%Y-%m-%d"), estado_cosecha, peso_bruto, cantidad_tapers, taper_envasado, peso_sobrante, merma, user['area']))
-                    st.success("¡Registro guardado en base de datos segura!")
+                    st.success("Registro guardado en base de datos segura.")
+
         elif user['area'] == "Siembra":
-            st.subheader("🌱 Nueva Siembra")
+            st.subheader("Nueva Siembra")
             with st.form("form_siembra"):
                 c1, c2 = st.columns(2)
                 with c1: cultivo = st.selectbox("Cultivo", PRODUCTOS); bandejas = st.number_input("N° Bandejas", min_value=1, step=1)
@@ -229,8 +269,9 @@ else:
                 if st.form_submit_button("Registrar Siembra"):
                     add_data("siembra_v2", (cultivo, bandejas, "Por definir", semilla, fecha.strftime("%Y-%m-%d")))
                     st.success("Siembra registrada.")
+
         elif user['area'] == "Tienda":
-            st.subheader("🛒 Punto de Venta")
+            st.subheader("Punto de Venta")
             tab_v, tab_p, tab_c = st.tabs(["Registrar Venta", "Registrar Pérdida", "Nuevo Contacto"])
             with tab_v:
                 with st.form("form_ventas"):
@@ -256,11 +297,12 @@ else:
                     if st.form_submit_button("Guardar Contacto"): add_data("contactos_v2", (nombre, tel, email, pot)); st.success("Contacto guardado.")
 
     elif user["rol"] == "jefe":
-        st.title("📊 Dashboard Privado - GEA ERP")
-        menu = st.selectbox("Navegación", ["📈 Producción (Tiempo Real)", "🌱 Siembra", "🛒 Tienda y Finanzas", "📞 CRM (Contactos)", "📅 Reporte IA y Exportación", "⚙️ Seguridad"])
-        if menu == "📈 Producción (Tiempo Real)":
-            st.markdown("##### 📂 Carga Masiva de Datos")
-            uploaded_file = st.file_uploader("Sube el archivo Excel para procesar los datos.", type=['xlsx', 'xls'], key="excel_jefe")
+        st.title("Dashboard Privado - GEA ERP")
+        menu = st.selectbox("Navegación", ["Producción (Tiempo Real)", "Siembra", "Tienda y Finanzas", "CRM (Contactos)", "Reporte IA y Exportación", "Seguridad"])
+        
+        if menu == "Producción (Tiempo Real)":
+            st.markdown("##### Carga Masiva de Datos Históricos")
+            uploaded_file = st.file_uploader("Suba el archivo Excel para procesar los datos.", type=['xlsx', 'xls'], key="excel_jefe")
             if uploaded_file is not None:
                 try:
                     df_excel = pd.read_excel(uploaded_file, sheet_name='Hoja2')
@@ -274,10 +316,10 @@ else:
                             except: return date.today().strftime('%Y-%m-%d')
                         def map_state(s):
                             s = str(s)
-                            if '✔' in s: return '✔ Óptimo'
-                            if '±' in s: return '± Regular'
-                            if '✗' in s: return '✗ Deficiente'
-                            return '✔ Óptimo'
+                            if '✔' in s: return 'Optimo'
+                            if '±' in s: return 'Regular'
+                            if '✗' in s: return 'Deficiente'
+                            return 'Optimo'
                         def safe_num(val, is_int=False):
                             try:
                                 val = float(val)
@@ -293,8 +335,8 @@ else:
             st.markdown("---")
             df = get_data("produccion_final")
             if df.empty:
-                st.info("Sin datos de producción. Sube un Excel o genera datos de demostración.")
-                if st.button("🎲 Generar Datos de Demostración (Junio y Julio)"): cargar_datos_demo(); st.rerun()
+                st.info("Sin datos de producción. Suba un Excel o genere datos de demostración.")
+                if st.button("Generar Datos de Demostración (Junio y Julio)"): cargar_datos_demo(); st.rerun()
             else:
                 df['fecha_cosecha'] = pd.to_datetime(df['fecha_cosecha'])
                 df['mes_num'] = df['fecha_cosecha'].dt.strftime('%Y-%m')
@@ -302,12 +344,12 @@ else:
                 meses_formateados = [f"{MESES_NOMBRES.get(m.split('-')[1], m.split('-')[1])} {m.split('-')[0]}" for m in meses_unicos]
                 mapa_meses = dict(zip(meses_formateados, meses_unicos))
                 
-                st.markdown("#### 📁 Filtros de Tiempo")
+                st.markdown("#### Carpetas Mensuales")
                 col_filtro, col_demo = st.columns([3, 1])
-                with col_filtro: mes_sel_txt = st.selectbox("Selecciona el mes a analizar:", ["Ver Todo el Año"] + meses_formateados)
+                with col_filtro: mes_sel_txt = st.selectbox("Seleccione el período a analizar:", ["Ver Todo el Año"] + meses_formateados)
                 with col_demo:
                     st.write("")
-                    if st.button("🎲 Cargar Demo Jun/Jul"): cargar_datos_demo(); st.rerun()
+                    if st.button("Cargar Demo Jun/Jul"): cargar_datos_demo(); st.rerun()
 
                 if mes_sel_txt != "Ver Todo el Año":
                     df = df[df['mes_num'] == mapa_meses[mes_sel_txt]]
@@ -320,42 +362,42 @@ else:
                 c3.metric("Merma Total (g)", f"{df['merma'].sum():.1f}")
                 
                 st.markdown("---")
-                st.subheader("📈 Gráfico de Producción")
+                st.subheader("Gráfico de Producción")
                 df_time = df.groupby('fecha_cosecha').agg({'cantidad_tapers':'sum', 'merma':'sum'}).reset_index()
                 df_time['fecha_str'] = df_time['fecha_cosecha'].dt.strftime('%d-%m')
-                chart_tapers = alt.Chart(df_time).mark_area(color="#2ca02c", opacity=0.5).encode(x=alt.X('fecha_str:O', title='Fecha', sort=df_time['fecha_str'].tolist()), y=alt.Y('cantidad_tapers:Q', title='Tapers'))
-                chart_merma = alt.Chart(df_time).mark_line(color="#d62728", point=True, strokeWidth=3).encode(x=alt.X('fecha_str:O', sort=df_time['fecha_str'].tolist()), y=alt.Y('merma:Q', title='Merma (g)'))
+                chart_tapers = alt.Chart(df_time).mark_area(color="#4CAF50", opacity=0.5).encode(x=alt.X('fecha_str:O', title='Fecha', sort=df_time['fecha_str'].tolist()), y=alt.Y('cantidad_tapers:Q', title='Tapers'))
+                chart_merma = alt.Chart(df_time).mark_line(color="#C62828", point=True, strokeWidth=2).encode(x=alt.X('fecha_str:O', sort=df_time['fecha_str'].tolist()), y=alt.Y('merma:Q', title='Merma (g)'))
                 st.altair_chart(alt.layer(chart_tapers, chart_merma).resolve_scale(y='independent').properties(height=400), use_container_width=True)
-                st.caption("🔍 **Interpretación:** Los picos verdes muestran días de alta producción. Si un pico verde coincide con un pico rojo, significa que se produjo mucho, pero también se desperdició mucho ese día. Buscamos picos verdes altos con línea roja plana.")
+                st.caption("Interpretación: Los picos verdes muestran días de alta producción. Si un pico verde coincide con un pico rojo, indica alta producción con alto desperdicio. El objetivo es picos verdes altos con línea roja plana.")
 
                 st.markdown("---")
-                st.subheader("📊 Diagrama de Pareto de Merma")
+                st.subheader("Diagrama de Pareto de Merma")
                 df_pareto = df.groupby('producto')['merma'].sum().reset_index().sort_values(by='merma', ascending=False)
                 df_pareto['cumulative'] = df_pareto['merma'].cumsum() / df_pareto['merma'].sum() * 100
                 base = alt.Chart(df_pareto).encode(x=alt.X('producto:N', sort=df_pareto['producto'].tolist(), title='Cultivo'))
-                bars = base.mark_bar(color="#d62728").encode(y=alt.Y('merma:Q', title='Merma (g)'))
-                line = base.mark_line(color='orange', point=True, strokeWidth=3).encode(y=alt.Y('cumulative:Q', title='Acumulado (%)'))
+                bars = base.mark_bar(color="#C62828").encode(y=alt.Y('merma:Q', title='Merma (g)'))
+                line = base.mark_line(color='#FF9800', point=True, strokeWidth=2).encode(y=alt.Y('cumulative:Q', title='Acumulado (%)'))
                 st.altair_chart(alt.layer(bars, line).resolve_scale(y='independent').properties(height=350), use_container_width=True)
-                st.caption("🔍 **Interpretación:** Según la regla 80/20, enfócate en los cultivos que están antes de que la línea naranja cruce el 80%. Esos cultivos (las barras más altas) son los que están generando la mayoría de tus pérdidas.")
+                st.caption("Interpretación: Según la regla 80/20, enfóquese en los cultivos antes de que la línea naranja cruce el 80%. Representan la mayoría de las pérdidas.")
 
                 st.markdown("---")
                 c_a, c_b = st.columns(2)
                 with c_a:
                     st.subheader("Merma por Estado")
-                    st.altair_chart(alt.Chart(df).mark_bar(color="#d62728").encode(x='estado_cosecha:N', y='sum(merma):Q').properties(height=300), use_container_width=True)
-                    st.caption("🔍 **Interpretación:** La merma está ligada al estado del lote. Un lote deficiente (✗) genera hasta 4 veces más pérdida que uno óptimo (✔).")
+                    st.altair_chart(alt.Chart(df).mark_bar(color="#C62828").encode(x='estado_cosecha:N', y='sum(merma):Q').properties(height=300), use_container_width=True)
+                    st.caption("Interpretación: La merma está ligada al estado. Un lote deficiente genera hasta 4 veces más pérdida que uno óptimo.")
                 with c_b:
                     st.subheader("Producción por Cultivo")
                     st.altair_chart(alt.Chart(df).mark_bar().encode(y='producto:N', x='sum(cantidad_tapers):Q', color='producto:N').properties(height=300), use_container_width=True)
-                    st.caption("🔍 **Interpretación:** Compara el volumen. Recuerda que un alto volumen no siempre significa alta eficiencia.")
+                    st.caption("Interpretación: Alto volumen no equivale a alta eficiencia. Cruce estos datos con el Pareto.")
 
                 st.markdown("---")
-                st.subheader("🤖 Asistente de Análisis IA (Consultor Experto)")
-                st.caption("La IA analiza el período seleccionado. Prueba preguntando: '¿Qué opinion me das del diagrama de Pareto?'")
+                st.subheader("Asistente de Análisis IA (Consultor Experto)")
+                st.caption("La IA analiza el período seleccionado. Pruebe: '¿Qué opinion me das del diagrama de Pareto?'")
                 for msg in st.session_state.chat_history:
-                    if msg['role'] == 'user': st.info(f"**Tú:** {msg['content']}")
+                    if msg['role'] == 'user': st.info(f"**Usuario:** {msg['content']}")
                     else: st.success(msg['content'])
-                pregunta = st.text_input("Realiza tu consulta a la IA:", placeholder="Ej: ¿Cómo mejoramos la eficiencia este mes?")
+                pregunta = st.text_input("Realice su consulta a la IA:", placeholder="Ej: ¿Cómo mejoramos la eficiencia este mes?")
                 if st.button("Generar Informe IA"):
                     if pregunta:
                         st.session_state.chat_history.append({"role": "user", "content": pregunta})
@@ -366,16 +408,16 @@ else:
                 st.subheader("Registro Detallado")
                 st.dataframe(df.sort_values(by='id', ascending=False), use_container_width=True)
 
-        elif menu == "🌱 Siembra":
+        elif menu == "Siembra":
             st.subheader("Control de Siembras")
             df = get_data("siembra_v2")
-            if df.empty: st.warning("Aún no se han registrado siembras.")
+            if df.empty: st.warning("No se han registrado siembras.")
             else:
                 st.dataframe(df.sort_values(by='id', ascending=False), use_container_width=True)
                 st.altair_chart(alt.Chart(df).mark_bar().encode(x='cultivo:N', y='sum(semilla_g):Q', color='cultivo:N'), use_container_width=True)
-                st.caption("🔍 **Interpretación:** Muestra qué cultivos consumen más semilla. Útil para controlar costos de insumos.")
+                st.caption("Interpretación: Muestra qué cultivos consumen más semilla. Útil para controlar costos de insumos.")
 
-        elif menu == "🛒 Tienda y Finanzas":
+        elif menu == "Tienda y Finanzas":
             st.subheader("Resumen Financiero")
             df_v = get_data("ventas_v2")
             df_p = get_data("perdidas_v2")
@@ -384,15 +426,15 @@ else:
             c2.metric("Pérdidas Registradas", len(df_p))
             if not df_v.empty:
                 st.altair_chart(alt.Chart(df_v).mark_bar().encode(x='producto:N', y='sum(total):Q', color='producto:N'), use_container_width=True)
-                st.caption("🔍 **Interpretación:** Los productos más altos son tus mejores ingresos. Los bajos podrían requerir estrategias de venta.")
+                st.caption("Interpretación: Los productos más altos son los mayores ingresos. Los bajos podrían requerir estrategias de venta.")
 
-        elif menu == "📞 CRM (Contactos)":
+        elif menu == "CRM (Contactos)":
             st.subheader("Base de Datos de Clientes")
             df = get_data("contactos_v2")
             if df.empty: st.info("No hay contactos registrados.")
             else: st.dataframe(df, use_container_width=True)
 
-        elif menu == "📅 Reporte IA y Exportación":
+        elif menu == "Reporte IA y Exportación":
             st.subheader("Análisis Ejecutivo y Exportación")
             df_prod = get_data("produccion_final")
             if df_prod.empty: st.warning("No hay datos para analizar.")
@@ -401,27 +443,27 @@ else:
                 try:
                     output = io.BytesIO()
                     with pd.ExcelWriter(output, engine='openpyxl') as writer: df_export.to_excel(writer, index=False, sheet_name='Hoja2')
-                    st.download_button("📥 Descargar Excel Final de Cosechas", data=output.getvalue(), file_name=f"GEA_Reporte_Cosechas_{date.today().strftime('%Y_%m')}.xlsx")
+                    st.download_button("Descargar Excel Final de Cosechas", data=output.getvalue(), file_name=f"GEA_Reporte_Cosechas_{date.today().strftime('%Y_%m')}.xlsx")
                 except:
                     st.info("Descarga de Excel disponible en versión local.")
                 
                 st.markdown("---")
-                st.markdown("#### 🤖 Análisis Ejecutivo en Tiempo Real")
-                if st.button("🤖 GENERAR REPORTE EJECUTIVO AHORA", use_container_width=True, type="primary"):
+                st.markdown("#### Análisis Ejecutivo en Tiempo Real")
+                if st.button("GENERAR REPORTE EJECUTIVO AHORA", use_container_width=True):
                     total_lotes = len(df_prod); total_tapers = df_prod['cantidad_tapers'].sum(); total_merma = df_prod['merma'].sum()
                     ratio_merma = (total_merma / total_tapers) * 100 if total_tapers > 0 else 0
                     cultivo_top_prod = df_prod.groupby('producto')['cantidad_tapers'].sum().idxmax()
                     cultivo_top_merma = df_prod.groupby('producto')['merma'].sum().idxmax()
-                    num_deficientes = len(df_prod[df_prod['estado_cosecha'] == '✗ Deficiente'])
-                    estado_general = "ÓPTIMO" if ratio_merma < 5.0 else "ACEPTABLE" if ratio_merma < 15.0 else "CRÍTICO"
+                    num_deficientes = len(df_prod[df_prod['estado_cosecha'] == 'Deficiente'])
+                    estado_general = "OPTIMO" if ratio_merma < 5.0 else "ACEPTABLE" if ratio_merma < 15.0 else "CRITICO"
                     reporte = f"REPORTE EJECUTIVO GEA SYSTEM - {date.today().strftime('%d/%m/%Y')}\n1. RESUMEN GENERAL:\nLotes: {total_lotes} | Tapers: {total_tapers} | Merma: {total_merma:.1f}g ({ratio_merma:.1f}%). Estado: {estado_general}.\n2. DEFICIENCIAS:\n{num_deficientes} lotes deficientes. Cultivo crítico: {cultivo_top_merma}.\n3. MEJORAS:\nEstandarizar sustrato. Replicar lotes Óptimos.\n4. CONCLUSIÓN:\nCultivo top: {cultivo_top_prod}."
                     st.session_state.reporte_ia = reporte
                     st.rerun()
                 if st.session_state.reporte_ia:
                     st.code(st.session_state.reporte_ia, language='text')
-                    st.download_button("📥 Descargar Reporte", data=st.session_state.reporte_ia, file_name=f"GEA_Reporte_IA_{date.today().strftime('%Y_%m_%d')}.txt")
+                    st.download_button("Descargar Reporte", data=st.session_state.reporte_ia, file_name=f"GEA_Reporte_IA_{date.today().strftime('%Y_%m_%d')}.txt")
 
-        elif menu == "⚙️ Seguridad":
+        elif menu == "Seguridad":
             st.subheader("Cambio de Credenciales (Solo Director)")
             nuevo_pin = st.text_input("Ingrese nuevo Código Maestro", type="password")
             if st.button("Actualizar Código Maestro"):
