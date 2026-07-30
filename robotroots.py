@@ -225,9 +225,6 @@ else:
                     'Peso sobrante/ Remanente', 'Merma'
                 ])
                 output = io.BytesIO()
-                with pd.ExcelWriter(output, engine='openpyxl') as writer:
-                    df_plantilla.to_excel(writer, index=False, sheet_name='Hoja2')
-                st.download_button("📥 Descargar Plantilla", data=output.getvalue(), file_name="Plantilla_Cosecha_GEA.xlsx")
                 
                 # Subida de Excel llenado
                 st.markdown("**Sube tu Excel lleno aquí:**")
