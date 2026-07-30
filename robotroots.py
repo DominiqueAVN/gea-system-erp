@@ -8,7 +8,7 @@ import io
 import random
 
 # --- CONFIGURACIÓN INICIAL ---
-st.set_page_config(page_title="GEA System ERP", page_icon="🌱", layout="wide")
+st.set_page_config(page_title="GEA System ERP", page_icon="gea_logo.png", layout="wide")
 
 # --- BASE DE DATOS ---
 def init_db():
@@ -157,43 +157,55 @@ def logout():
 
 # --- LOGIN ---
 if not st.session_state.logged_in:
-    logo_path = "gea_logo.png"
-    if os.path.exists(logo_path):
-        col_img, col_title = st.columns([1, 3])
-        with col_img:
-            st.image(logo_path, width=100)
-        with col_title:
-            st.markdown("<h1 style='margin-top: 30px;'>GEA System ERP</h1>", unsafe_allow_html=True)
-    else:
-        st.title("🌱 GEA System ERP")
-    st.markdown("<h3 style='text-align: center; color: gray;'>Germinados Orgánicos Arequipa</h3>", unsafe_allow_html=True)
-    st.markdown("---")
+    # Ocultar menús de Streamlit para que parezca un software puro
+    st.markdown("""
+    <style>
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden;}
+        header {visibility: hidden;}
+        .stApp { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); }
+    </style>
+    """, unsafe_allow_html=True)
     
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        tab_jefe, tab_trab = st.tabs(["👔 Dirección / Jefatura", "👷 Personal de Planta"])
+        try:
+            st.image("gea_logo.png", width=120)
+        except:
+            pass
+        
+        st.markdown("<h1 style='text-align: center; color: #2c3e50; font-family: Arial, sans-serif; margin-bottom: 0px;'>GEA SYSTEM ERP</h1>", unsafe_allow_html=True)
+        st.markdown("<h4 style='text-align: center; color: #7f8c8d; font-family: Arial, sans-serif; margin-top: 0px;'>Germinados Orgánicos Arequipa</h4>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color: #95a5a6;'>Plataforma Operativa de Producción, Calidad y Ventas</p>", unsafe_allow_html=True)
+        st.markdown("<hr style='border: 1px solid #bdc3c7;'>", unsafe_allow_html=True)
+        
+        tab_jefe, tab_trab = st.tabs(["👔 Acceso Dirección", "👷 Acceso Personal de Planta"])
+        
         with tab_jefe:
-            st.subheader("Acceso Seguro Encriptado")
-            pin_input = st.text_input("Ingrese Código Maestro (PIN)", type="password")
-            if st.button("Desbloquear Panel", use_container_width=True, type="primary"):
+            st.markdown("##### Ingrese sus credenciales de Director")
+            pin_input = st.text_input("Código Maestro (PIN)", type="password", placeholder="••••••••")
+            if st.button("Desbloquear Panel Directivo", use_container_width=True, type="primary"):
                 if pin_input == get_config('pin_jefe'):
                     st.session_state.logged_in = True
                     st.session_state.user_data = {"nombre": "Director GEA", "rol": "jefe"}
                     st.rerun()
                 else:
-                    st.error("Código Maestro incorrecto.")
+                    st.error("⛔ Código Maestro incorrecto. Acceso denegado.")
+
         with tab_trab:
-            st.subheader("Fichar Turno")
-            area_trab = st.selectbox("Área de trabajo", ["Siembra", "Microgreens", "Tienda"])
-            pin_trab = st.text_input("PIN del Área", type="password")
+            st.markdown("##### Fichaje de Turno Operativo")
+            area_trab = st.selectbox("Seleccione su Área de Trabajo", ["Siembra", "Microgreens", "Tienda"])
+            pin_trab = st.text_input("PIN del Área Asignada", type="password", placeholder="••••")
+            
             pins_areas = {"Siembra": "1234", "Microgreens": "5678", "Tienda": "9012"}
-            if st.button("Ingresar al Sistema", use_container_width=True):
+            
+            if st.button("Fichar y Ingresar al Sistema", use_container_width=True):
                 if pin_trab == pins_areas.get(area_trab):
                     st.session_state.logged_in = True
                     st.session_state.user_data = {"nombre": f"Operario de {area_trab}", "rol": "trabajador", "area": area_trab}
                     st.rerun()
                 else:
-                    st.error("PIN de área incorrecto.")
+                    st.error("⛔ PIN de área incorrecto. Contacte a su supervisor.")
 
 # --- APLICACIÓN PRINCIPAL ---
 else:
