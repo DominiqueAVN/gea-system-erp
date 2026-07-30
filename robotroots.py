@@ -157,27 +157,50 @@ def logout():
 
 # --- LOGIN ---
 if not st.session_state.logged_in:
-    # Ocultar menús de Streamlit para que parezca un software puro
+    # CSS para tema oscuro, fondo animado y ocultar menús de Streamlit
     st.markdown("""
     <style>
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
         header {visibility: hidden;}
-        .stApp { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); }
+        
+        /* Fondo oscuro animado con colores de microgreens y tu logo */
+        .stApp {
+            background: linear-gradient(135deg, #0f1108, #1a2b15, #0d0d0d, #2a0a0a);
+            background-size: 400% 400%;
+            animation: gradientMove 15s ease infinite;
+        }
+        
+        @keyframes gradientMove {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        /* Textos en blanco para que resalten en el oscuro */
+        .stApp h1, .stApp h4, .stApp p, .stApp label {
+            color: #ecf0f1 !important;
+        }
+        
+        /* Logo con un leve brillo */
+        .stImage img {
+            border-radius: 15px;
+            box-shadow: 0 0 25px rgba(255, 255, 255, 0.2);
+        }
     </style>
     """, unsafe_allow_html=True)
     
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         try:
-            st.image("gea_logo.png", width=120)
+            st.image("gea_logo.png", width=150)
         except:
             pass
         
-        st.markdown("<h1 style='text-align: center; color: #2c3e50; font-family: Arial, sans-serif; margin-bottom: 0px;'>GEA SYSTEM ERP</h1>", unsafe_allow_html=True)
-        st.markdown("<h4 style='text-align: center; color: #7f8c8d; font-family: Arial, sans-serif; margin-top: 0px;'>Germinados Orgánicos Arequipa</h4>", unsafe_allow_html=True)
+        st.markdown("<h1 style='text-align: center; margin-bottom: 0px;'>GEA SYSTEM ERP</h1>", unsafe_allow_html=True)
+        st.markdown("<h4 style='text-align: center; color: #bdc3c7; margin-top: 0px;'>Germinados Orgánicos Arequipa</h4>", unsafe_allow_html=True)
         st.markdown("<p style='text-align: center; color: #95a5a6;'>Plataforma Operativa de Producción, Calidad y Ventas</p>", unsafe_allow_html=True)
-        st.markdown("<hr style='border: 1px solid #bdc3c7;'>", unsafe_allow_html=True)
+        st.markdown("<hr style='border: 1px solid #7f8c8d;'>", unsafe_allow_html=True)
         
         tab_jefe, tab_trab = st.tabs(["👔 Acceso Dirección", "👷 Acceso Personal de Planta"])
         
@@ -206,7 +229,6 @@ if not st.session_state.logged_in:
                     st.rerun()
                 else:
                     st.error("⛔ PIN de área incorrecto. Contacte a su supervisor.")
-
 # --- APLICACIÓN PRINCIPAL ---
 else:
     user = st.session_state.user_data
